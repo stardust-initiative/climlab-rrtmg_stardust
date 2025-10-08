@@ -400,16 +400,6 @@
       real(kind=rb), intent(in) :: t_mu(ncol,nlay,nbndsw)    ! Aerosols directional transmission
       real(kind=rb), intent(in) :: r_bar(ncol,nlay,nbndsw)    ! Aerosols diffusive reflection
       real(kind=rb), intent(in) :: t_bar(ncol,nlay,nbndsw)    ! Aerosols diffusive transmission  
-
-      ! real(kind=rb), intent(out) :: zref_dbg(:,:,:)
-      ! real(kind=rb), intent(out) :: zrefd_dbg(:,:,:)
-      ! real(kind=rb), intent(out) :: ztra_dbg(:,:,:)
-      ! real(kind=rb), intent(out) :: ztrad_dbg(:,:,:)
-
-      ! real(kind=rb) :: zref_col_dbg(nlay+1,ngptsw)
-      ! real(kind=rb) :: zrefd_col_dbg(nlay+1,ngptsw)
-      ! real(kind=rb) :: ztra_col_dbg(nlay+1,ngptsw)
-      ! real(kind=rb) :: ztrad_col_dbg(nlay+1,ngptsw)
       real(kind=rb) :: r_mu_col(nlay,nbndsw)    ! Column Aerosols directional reflection
       real(kind=rb) :: t_mu_col(nlay,nbndsw)    ! Column Aerosols directional transmission
       real(kind=rb) :: r_bar_col(nlay,nbndsw)   ! Column Aerosols diffusive reflection
@@ -651,6 +641,8 @@
 ! Modify to loop over all columns (nlon) or over daylight columns
 
       do iplon = 1, ncol
+! CLIMLAB here pass a single-column value of adjes to inatm_sw as we are in the column loop
+         adjes_local = adjes(iplon)
 
 ! Prepare atmosphere profile from GCM for use in RRTMG, and define
 ! other input parameters
