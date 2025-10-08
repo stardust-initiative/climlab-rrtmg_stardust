@@ -81,9 +81,8 @@ subroutine climlab_mcica_subcol_lw &
 !f2py depend(ncol,nlay) play,
 !f2py depend(ncol,nlay) cldfrac,ciwp,clwp,reic,relq
 !f2py depend(ncol,nlay) tauc
-!f2py depend(ncol,nlay) cldfmcl,ciwpmcl,clwpmcl
-!f2py depend(ncol,nlay) reicmcl,relqmcl
-!f2py depend(ncol,nlay) taucmcl
+! !f2py depend(ncol,nlay) cldfmcl,ciwpmcl,clwpmcl,taucmcl
+! !f2py depend(ncol,nlay) reicmcl,relqmcl
 
     ! Call the Monte Carlo Independent Column Approximation
     !   (McICA, Pincus et al., JC, 2003)
@@ -102,7 +101,7 @@ subroutine climlab_rrtmg_lw &
     inflglw , iceflglw, liqflglw, cldfmcl , &
     taucmcl , ciwpmcl , clwpmcl , reicmcl , relqmcl , tauaer  , &
     olr_sr  , uflx    , dflx    , hr      , uflxc   , dflxc,  hrc, &
-    duflx_dt,duflxc_dt)
+    duflx_dt,duflxc_dt, uflxspec, dflxspec, uflxcspec, dflxcspec)
 
 ! Modules
     use parkind, only : im => kind_im
@@ -164,6 +163,10 @@ subroutine climlab_rrtmg_lw &
                                                          ! with respect to surface temperature
     real(kind=rb), intent(out) :: duflxc_dt(ncol,nlay+1) ! change in clear sky upward longwave flux (w/m2/K)
                                                          ! with respect to surface temperature
+    real(kind=rb), intent(out) :: uflxspec(ncol,nlay+1,nbndlw) ! Total sky longwave upward flux spectrum (W/m2)
+    real(kind=rb), intent(out) :: dflxspec(ncol,nlay+1,nbndlw) ! Total sky longwave downward flux spectrum (W/m2)
+    real(kind=rb), intent(out) :: uflxcspec(ncol,nlay+1,nbndlw) ! Clear sky longwave upward flux spectrum (W/m2)
+    real(kind=rb), intent(out) :: dflxcspec(ncol,nlay+1,nbndlw) ! Clear sky longwave downward flux spectrum (W/m2)
 
 !  These are not comments! Necessary directives to f2py to handle array dimensions
 !f2py depend(ncol,nlay) play, plev, tlay, tlev
@@ -175,6 +178,7 @@ subroutine climlab_rrtmg_lw &
 !f2py depend(ncol,nlay) cldfmcl,ciwpmcl,clwpmcl,taucmcl
 !f2py depend(ncol,nlay) reicmcl,relqmcl
 !f2py depend(ncol,nlay) uflx,dflx,hr,uflxc,dflxc,hrc,duflx_dt,duflxc_dt
+!f2py depend(ncol,nlay,nbndlw) uflxspec, dflxspec, uflxcspec, dflxcspec
 
     !  Call the RRTMG_LW driver to compute radiative fluxes
     call rrtmg_lw(ncol    ,nlay    ,icld    ,ispec           ,idrv  , &
@@ -183,7 +187,7 @@ subroutine climlab_rrtmg_lw &
              cfc11vmr, cfc12vmr, cfc22vmr, ccl4vmr , emis    , &
              inflglw , iceflglw, liqflglw, cldfmcl , &
              taucmcl , ciwpmcl , clwpmcl , reicmcl , relqmcl , tauaer  , &
-             olr_sr  , uflx    , dflx    , hr      , uflxc   , dflxc,  hrc, &
-             duflx_dt,duflxc_dt )
+             olr_sr  , uflx, dflx, hr, uflxc, dflxc,  hrc, &
+             duflx_dt,duflxc_dt, uflxspec, dflxspec, uflxcspec, dflxcspec)
 
 end subroutine climlab_rrtmg_lw

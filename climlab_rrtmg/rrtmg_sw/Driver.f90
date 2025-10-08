@@ -102,17 +102,19 @@ end subroutine climlab_mcica_subcol_sw
 
 
 subroutine climlab_rrtmg_sw &
-    (ncol    ,nlay    ,icld    ,iaer    , &
+    (ncol    ,nlay    ,icld     ,ispec    ,iaer    , &
     play    ,plev    ,tlay    ,tlev    ,tsfc   , &
     h2ovmr , o3vmr   ,co2vmr  ,ch4vmr  ,n2ovmr ,o2vmr , &
     asdir   ,asdif   ,aldir   ,aldif   , &
-    coszen  ,adjes   ,dyofyr  ,scon    ,isolvar, &
+    kmodts, coszen  ,adjes   ,dyofyr  ,scon    ,isolvar, &
     inflgsw ,iceflgsw,liqflgsw,cldfmcl , &
     taucmcl ,ssacmcl ,asmcmcl ,fsfcmcl , &
     ciwpmcl ,clwpmcl ,reicmcl ,relqmcl , &
     tauaer  ,ssaaer  ,asmaer  ,ecaer   , &
     bndsolvar,indsolvar,solcycfrac, &
-    swuflx, swdflx, swhr, swuflxc, swdflxc, swhrc)
+    swuflx, swdflx, swhr, swuflxc, swdflxc, swhrc, &
+    swuflxspec, swdflxspec, swuflxcspec, swdflxcspec, &
+    add_aero_layer, r_mu, t_mu, r_bar, t_bar)
 
 ! Modules
     use parkind, only : im => kind_im
@@ -130,6 +132,7 @@ subroutine climlab_rrtmg_sw &
                                                     !    1: Random
                                                     !    2: Maximum/random
                                                     !    3: Maximum
+    integer(kind=im), intent(inout) :: ispec        ! spectral ASR output flag
     integer(kind=im), intent(inout) :: iaer         ! Aerosol option flag
                                                     !    0: No aerosol
                                                     !    6: ECMWF method
@@ -150,6 +153,7 @@ subroutine climlab_rrtmg_sw &
     real(kind=rb), intent(in) :: aldir(ncol)        ! Near-IR surface albedo direct rad
     real(kind=rb), intent(in) :: asdif(ncol)        ! UV/vis surface albedo: diffuse rad
     real(kind=rb), intent(in) :: asdir(ncol)        ! Near-IR surface albedo: diffuse rad
+    integer(kind=im), intent(in) :: kmodts
     real(kind=rb), intent(in) :: coszen(ncol)       ! Cosine of solar zenith angle
     real(kind=rb), intent(in) :: adjes(ncol)        ! Flux adjustment (Earth/Sun distance and/or zenith angle compensation)
     integer(kind=im), intent(in) :: dyofyr          ! Day of the year (used to get Earth/Sun
@@ -238,6 +242,15 @@ subroutine climlab_rrtmg_sw &
     real(kind=rb), intent(out) :: swuflxc(ncol,nlay+1)   ! Clear sky shortwave upward flux (W/m2)
     real(kind=rb), intent(out) :: swdflxc(ncol,nlay+1)   ! Clear sky shortwave downward flux (W/m2)
     real(kind=rb), intent(out) :: swhrc(ncol,nlay)       ! Clear sky shortwave radiative heating rate (K/d)
+    real(kind=rb), intent(out) :: swuflxspec(ncol,nlay+1,nbndsw)    ! Total sky shortwave upward flux spectrum (W/m2)
+    real(kind=rb), intent(out) :: swdflxspec(ncol,nlay+1,nbndsw)    ! Total sky shortwave downward flux spectrum (W/m2)
+    real(kind=rb), intent(out) :: swuflxcspec(ncol,nlay+1,nbndsw)   ! Clear sky shortwave upward flux spectrum (W/m2)
+    real(kind=rb), intent(out) :: swdflxcspec(ncol,nlay+1,nbndsw)   ! Clear sky shortwave downward flux spectrum (W/m2)
+    integer(kind=im), intent(in) :: add_aero_layer
+    real(kind=rb), intent(in) :: r_mu(ncol,nlay,nbndsw)    ! Aerosols directional reflection
+    real(kind=rb), intent(in) :: t_mu(ncol,nlay,nbndsw)    ! Aerosols directional transmission
+    real(kind=rb), intent(in) :: r_bar(ncol,nlay,nbndsw)    ! Aerosols diffusive reflection
+    real(kind=rb), intent(in) :: t_bar(ncol,nlay,nbndsw)    ! Aerosols diffusive transmission
 
 !  These are not comments! Necessary directives to f2py to handle array dimensions
 !f2py depend(ncol,nlay) play
@@ -246,26 +259,30 @@ subroutine climlab_rrtmg_sw &
 !f2py depend(ncol,nlay) tlev
 !f2py depend(ncol,nlay) h2ovmr,o3vmr,co2vmr,ch4vmr,n2ovmr,o2vmr
 !f2py depend(ncol) asdir,asdif,aldir,aldif,coszen, adjes, tsfc
+!f2py depend(ncol,nlay) tauaer,ssaaer,asmaer,ecaer
 !f2py depend(ncol,nlay) cldfmcl,taucmcl,ssacmcl,asmcmcl,fsfcmcl
 !f2py depend(ncol,nlay) ciwpmcl,clwpmcl
 !f2py depend(ncol,nlay) reicmcl,relqmcl
-!f2py depend(ncol,nlay) tauaer,ssaaer,asmaer,ecaer
 !f2py depend(ncol,nlay) swuflx,swdflx
 !f2py depend(ncol,nlay) swhr
 !f2py depend(ncol,nlay) swuflxc,swdflxc
 !f2py depend(ncol,nlay) swhrc
+!f2py depend(ncol,nlay,nbndsw) swuflxspec,swdflxspec,swuflxcspec,swdflxcspec
+!f2py depend(ncol,nlay,nbndsw) r_mu, t_mu, r_bar, t_bar
 
     !  Call the RRTMG_SW driver to compute radiative fluxes
-    call rrtmg_sw(ncol    ,nlay    ,icld    ,iaer    , &
+    call rrtmg_sw(ncol    ,nlay    ,icld    ,ispec    ,iaer    , &
               play    ,plev    ,tlay    ,tlev    ,tsfc   , &
               h2ovmr , o3vmr   ,co2vmr  ,ch4vmr  ,n2ovmr ,o2vmr , &
               asdir   ,asdif   ,aldir   ,aldif   , &
-              coszen  ,adjes   ,dyofyr  ,scon    ,isolvar, &
+              kmodts, coszen  ,adjes   ,dyofyr  ,scon    ,isolvar, &
               inflgsw ,iceflgsw,liqflgsw,cldfmcl , &
               taucmcl ,ssacmcl ,asmcmcl ,fsfcmcl , &
               ciwpmcl ,clwpmcl ,reicmcl ,relqmcl , &
               tauaer  ,ssaaer  ,asmaer  ,ecaer   , &
               swuflx  ,swdflx  ,swhr    ,swuflxc ,swdflxc ,swhrc, &
-              bndsolvar,indsolvar,solcycfrac)
+              swuflxspec, swdflxspec, swuflxcspec, swdflxcspec, &
+              bndsolvar,indsolvar,solcycfrac, &
+              add_aero_layer, r_mu, t_mu, r_bar, t_bar)
 
 end subroutine climlab_rrtmg_sw

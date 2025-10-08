@@ -116,7 +116,7 @@ def test_rrtmg_lw_clearsky():
 
     for ispec in [0, 1]: # Spectral OLR output flag, 0: only calculate total fluxes, 1: also return spectral OLR
         # Call the RRTMG_LW driver
-        (olr_sr, uflx, dflx, hr, uflxc, dflxc, hrc, duflx_dt, duflxc_dt) = \
+        (olr_sr, uflx, dflx, hr, uflxc, dflxc, hrc, duflx_dt, duflxc_dt, uflxspec, dflxspec, uflxcspec, dflxcspec) = \
                 rrtmg_lw.climlab_rrtmg_lw(ncol, nlay, icld, ispec, idrv,
                      play, plev, tlay, tlev, tsfc,
                      h2ovmr, o3vmr, co2vmr, ch4vmr, n2ovmr, o2vmr,
@@ -160,7 +160,7 @@ def test_rrtmg_lw_mcica():
 
     for ispec in [0, 1]: # Spectral OLR output flag, 0: only calculate total fluxes, 1: also return spectral OLR
         # Call the RRTMG_LW driver
-        (olr_sr, uflx, dflx, hr, uflxc, dflxc, hrc, duflx_dt, duflxc_dt) = \
+        (olr_sr, uflx, dflx, hr, uflxc, dflxc, hrc, duflx_dt, duflxc_dt, uflxspec, dflxspec, uflxcspec, dflxcspec) = \
                 rrtmg_lw.climlab_rrtmg_lw(ncol, nlay, icld, ispec, idrv,
                      play, plev, tlay, tlev, tsfc,
                      h2ovmr, o3vmr, co2vmr, ch4vmr, n2ovmr, o2vmr,
@@ -181,6 +181,8 @@ def test_rrtmg_sw_clearsky():
     inflgsw  = 2
     iceflgsw = 1
     liqflgsw = 1
+    kmodts = 2
+    ispec = 1
     # AEROSOLS
     iaer = 0   #! Aerosol option flag
                 #!    0: No aerosol
@@ -263,18 +265,24 @@ def test_rrtmg_sw_clearsky():
     ssacmcl = np.zeros((ngptsw,ncol,nlay))
     asmcmcl = np.zeros((ngptsw,ncol,nlay))
     fsfcmcl = np.zeros((ngptsw,ncol,nlay))
+    add_aero_layer = 1
+    r_mu = np.zeros((ncol,nlay,nbndsw))
+    t_mu = np.ones((ncol,nlay,nbndsw))
+    r_bar = np.zeros((ncol,nlay,nbndsw))
+    t_bar = np.ones((ncol,nlay,nbndsw))
 
-    (swuflx, swdflx, swhr, swuflxc, swdflxc, swhrc) = \
-            rrtmg_sw.climlab_rrtmg_sw(ncol, nlay, icld, iaer,
+    (swuflx, swdflx, swhr, swuflxc, swdflxc, swhrc, swuflxspec, swdflxspec, swuflxcspec, swdflxcspec) = \
+            rrtmg_sw.climlab_rrtmg_sw(ncol, nlay, icld, ispec, iaer,
                 play, plev, tlay, tlev, tsfc,
                 h2ovmr, o3vmr, co2vmr, ch4vmr, n2ovmr, o2vmr,
                 asdir, asdif, aldir, aldif,
-                coszen, adjes, dyofyr, scon, isolvar,
+                kmodts, coszen, adjes, dyofyr, scon, isolvar,
                 inflgsw, iceflgsw, liqflgsw, cldfmcl,
                 taucmcl, ssacmcl, asmcmcl, fsfcmcl,
                 ciwpmcl, clwpmcl, reicmcl, relqmcl,
                 tauaer, ssaaer, asmaer, ecaer,
-                bndsolvar, indsolvar, solcycfrac)
+                bndsolvar, indsolvar, solcycfrac, 
+                add_aero_layer, r_mu, t_mu, r_bar, t_bar)
 
 def test_rrtmg_sw_mcica():
     #  Initialize absorption data
@@ -291,6 +299,8 @@ def test_rrtmg_sw_mcica():
     ssac = 0.  # In-cloud single scattering albedo
     asmc = 0.  # In-cloud asymmetry parameter
     fsfc = 0.  # In-cloud forward scattering fraction (delta function pointing forward "forward peaked scattering")
+    kmodts = 2
+    ispec = 1
     # AEROSOLS
     iaer = 0   #! Aerosol option flag
                 #!    0: No aerosol
@@ -336,6 +346,11 @@ def test_rrtmg_sw_mcica():
     aldir = 0.3
     asdif = 0.3
     asdir = 0.3
+    add_aero_layer = 1
+    r_mu = np.zeros((ncol,nlay,nbndsw))
+    t_mu = np.ones((ncol,nlay,nbndsw))
+    r_bar = np.zeros((ncol,nlay,nbndsw))
+    t_bar = np.ones((ncol,nlay,nbndsw))
 
     #  Call the Monte Carlo Independent Column Approximation (McICA, Pincus et al., JC, 2003)
     (cldfmcl, ciwpmcl, clwpmcl, reicmcl, relqmcl, taucmcl,
@@ -343,17 +358,18 @@ def test_rrtmg_sw_mcica():
                     ncol, nlay, icld, permuteseed, irng, play,
                     cldfrac, ciwp, clwp, reic, relq, tauc, ssac, asmc, fsfc)
 
-    (swuflx, swdflx, swhr, swuflxc, swdflxc, swhrc) = \
-            rrtmg_sw.climlab_rrtmg_sw(ncol, nlay, icld, iaer,
+    (swuflx, swdflx, swhr, swuflxc, swdflxc, swhrc, swuflxspec, swdflxspec, swuflxcspec, swdflxcspec) = \
+            rrtmg_sw.climlab_rrtmg_sw(ncol, nlay, icld, ispec, iaer,
                 play, plev, tlay, tlev, tsfc,
                 h2ovmr, o3vmr, co2vmr, ch4vmr, n2ovmr, o2vmr,
                 asdir, asdif, aldir, aldif,
-                coszen, adjes, dyofyr, scon, isolvar,
+                kmodts, coszen, adjes, dyofyr, scon, isolvar,
                 inflgsw, iceflgsw, liqflgsw, cldfmcl,
                 taucmcl, ssacmcl, asmcmcl, fsfcmcl,
                 ciwpmcl, clwpmcl, reicmcl, relqmcl,
                 tauaer, ssaaer, asmaer, ecaer,
-                bndsolvar, indsolvar, solcycfrac)
+                bndsolvar, indsolvar, solcycfrac,
+                add_aero_layer, r_mu, t_mu, r_bar, t_bar)
 
 def test_rrtmg_sw_multicol():
     ncol = 2
@@ -377,6 +393,8 @@ def test_rrtmg_sw_multicol():
     inflgsw  = 2
     iceflgsw = 1
     liqflgsw = 1
+    kmodts = 2
+    ispec = 1
     # AEROSOLS
     iaer = 0   #! Aerosol option flag
                 #!    0: No aerosol
@@ -424,18 +442,24 @@ def test_rrtmg_sw_multicol():
     ssacmcl_2d = np.zeros((ngptsw,ncol,nlay))
     asmcmcl_2d = np.zeros((ngptsw,ncol,nlay))
     fsfcmcl_2d = np.zeros((ngptsw,ncol,nlay))
+    add_aero_layer = 1
+    r_mu = np.zeros((ncol,nlay,nbndsw))
+    t_mu = np.ones((ncol,nlay,nbndsw))
+    r_bar = np.zeros((ncol,nlay,nbndsw))
+    t_bar = np.ones((ncol,nlay,nbndsw))
 
-    (swuflx, swdflx, swhr, swuflxc, swdflxc, swhrc) = \
-            rrtmg_sw.climlab_rrtmg_sw(ncol, nlay, icld, iaer,
+    (swuflx, swdflx, swhr, swuflxc, swdflxc, swhrc, swuflxspec, swdflxspec, swuflxcspec, swdflxcspec) = \
+            rrtmg_sw.climlab_rrtmg_sw(ncol, nlay, icld, ispec, iaer,
                 play_2d, plev_2d, tlay_2d, tlev_2d, tsfc_2d,
                 h2ovmr_2d, o3vmr_2d, co2vmr_2d, ch4vmr_2d, n2ovmr_2d, o2vmr_2d,
                 asdir_2d, asdif_2d, aldir_2d, aldif_2d,
-                coszen_2d, adjes_2d, dyofyr, scon, isolvar,
+                kmodts, coszen_2d, adjes_2d, dyofyr, scon, isolvar,
                 inflgsw, iceflgsw, liqflgsw, cldfmcl_2d,
                 taucmcl_2d, ssacmcl_2d, asmcmcl_2d, fsfcmcl_2d,
                 ciwpmcl_2d, clwpmcl_2d, reicmcl_2d, relqmcl_2d,
                 tauaer_2d, ssaaer_2d, asmaer_2d, ecaer_2d,
-                bndsolvar, indsolvar, solcycfrac)
+                bndsolvar, indsolvar, solcycfrac,
+                add_aero_layer, r_mu, t_mu, r_bar, t_bar)
 
     # The downwelling SW at top of model should be twice as large in column 0
     assert np.isclose(swdflx[0,-1], irradiance_factor*swdflx[1,-1])
