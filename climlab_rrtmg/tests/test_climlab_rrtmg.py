@@ -117,7 +117,7 @@ def test_rrtmg_lw_clearsky():
     uflx_toa = 390.1
     for ispec in [0, 1]: # Spectral OLR output flag, 0: only calculate total fluxes, 1: also return spectral OLR
         # Call the RRTMG_LW driver
-        (olr_sr, uflx, dflx, hr, uflxc, dflxc, hrc, duflx_dt, duflxc_dt, uflxspec, dflxspec, uflxcspec, dflxcspec) = \
+        (olr_sr1, uflx1, dflx1, hr1, uflxc1, dflxc1, hrc1, duflx_dt1, duflxc_dt1) = \
                 rrtmg_lw.climlab_rrtmg_lw(ncol, nlay, icld, ispec, idrv,
                      play, plev, tlay, tlev, tsfc,
                      h2ovmr, o3vmr, co2vmr, ch4vmr, n2ovmr, o2vmr,
@@ -125,15 +125,26 @@ def test_rrtmg_lw_clearsky():
                      inflglw, iceflglw, liqflglw, cldfmcl,
                      taucmcl, ciwpmcl, clwpmcl, reicmcl, relqmcl,
                      tauaer)
-        assert(np.abs(uflx[0,0]-uflx_toa) < 5.0)
+        (olr_sr2, uflx2, dflx2, hr2, uflxc2, dflxc2, hrc2, duflx_dt2, duflxc_dt2, uflxspec, dflxspec, uflxcspec, dflxcspec) = \
+                rrtmg_lw.climlab_rrtmg_lw_expanded(ncol, nlay, icld, ispec, idrv,
+                     play, plev, tlay, tlev, tsfc,
+                     h2ovmr, o3vmr, co2vmr, ch4vmr, n2ovmr, o2vmr,
+                     cfc11vmr, cfc12vmr, cfc22vmr, ccl4vmr, emis,
+                     inflglw, iceflglw, liqflglw, cldfmcl,
+                     taucmcl, ciwpmcl, clwpmcl, reicmcl, relqmcl,
+                     tauaer)
+        assert(np.abs(uflx1[0,0]-uflx_toa) < 5.0)
+        assert(np.all(np.isclose(uflx1, uflx2, rtol=1e-3)))
+        assert(np.all(np.isclose(dflx1, dflx2, rtol=1e-3)))
+        assert(np.all(np.isclose(hr1, hr2, rtol=1e-3)))
         assert((uflxcspec-uflxspec).std() == 0.0) # clear sky
         assert((dflxcspec-dflxspec).std() == 0.0) # clear sky
         if ispec == 0:
             assert(uflxspec.max() == 0.0)
             assert(dflxspec.max() == 0.0)
         elif ispec == 1:
-            assert(np.all(np.isclose(uflx, np.sum(uflxspec, axis=-1), rtol=1e-3)))
-            assert(np.all(np.isclose(dflx, np.sum(dflxspec, axis=-1), rtol=1e-3)))
+            assert(np.all(np.isclose(uflx1, np.sum(uflxspec, axis=-1), rtol=1e-3)))
+            assert(np.all(np.isclose(dflx1, np.sum(dflxspec, axis=-1), rtol=1e-3)))
 
 
 def test_rrtmg_lw_mcica():
@@ -171,7 +182,7 @@ def test_rrtmg_lw_mcica():
 
     for ispec in [0, 1]: # Spectral OLR output flag, 0: only calculate total fluxes, 1: also return spectral OLR
         # Call the RRTMG_LW driver
-        (olr_sr, uflx, dflx, hr, uflxc, dflxc, hrc, duflx_dt, duflxc_dt, uflxspec, dflxspec, uflxcspec, dflxcspec) = \
+        (olr_sr, uflx, dflx, hr, uflxc, dflxc, hrc, duflx_dt, duflxc_dt) = \
                 rrtmg_lw.climlab_rrtmg_lw(ncol, nlay, icld, ispec, idrv,
                      play, plev, tlay, tlev, tsfc,
                      h2ovmr, o3vmr, co2vmr, ch4vmr, n2ovmr, o2vmr,
