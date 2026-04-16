@@ -1,12 +1,11 @@
-# climlab-rrtmg
-
-[![Build and test](https://github.com/climlab/climlab-rrtmg/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/climlab/climlab-rrtmg/actions/workflows/build-and-test.yml)
+# climlab-rrtmg (Stardust fork)
 
 Brian Rose, University at Albany
+Stardust modifications by [Modeling-group-Stardust-labs-ltd](https://github.com/Modeling-group-Stardust-labs-ltd)
 
 ## About
 
-This is a stand-alone Python wrapper for the [RRTMG](http://rtweb.aer.com/rrtm_frame.html) radiation modules.
+This is a fork of [climlab-rrtmg](https://github.com/climlab/climlab-rrtmg), a stand-alone Python wrapper for the [RRTMG](http://rtweb.aer.com/rrtm_frame.html) radiation modules.
 
 The primary use-case is to drive the RRTMG radiation processes in [climlab](https://climlab.readthedocs.io/),
 but it can be used as a stand-alone radiation model if you are familiar with the
@@ -31,6 +30,41 @@ to Earth-Sun distance. Latest versions of climlab compute non-uniform values of
 `irradiance_factor` to compensate for [different diurnal averages of the solar zenith angle](https://climlab.readthedocs.io/en/latest/api/climlab.radiation.insolation.html). 
 climlab's `irradiance_factor` is mapped to `adjes` when this RRTMG driver is called from climlab.
 
+
+## Stardust modifications
+
+This fork extends the upstream [climlab-rrtmg](https://github.com/climlab/climlab-rrtmg)
+with the following features for stratospheric aerosol climate modeling:
+
+### OpenMP parallelization of column radiation calls
+
+The LW and SW Fortran drivers (`Driver.f90`) are modified to parallelize
+the radiation calculation over independent atmospheric columns using
+OpenMP `parallel do` directives. This provides significant speedup on
+multi-core machines when the model has many latitude points, since each
+column's radiation calculation is independent. Set `OMP_NUM_THREADS`
+to control the number of threads.
+
+### Ensemble cloud sampling
+
+Support for stochastic cloud overlap sampling with configurable
+`n_rrtmg_repeat` samples per column per radiation timestep. At each
+timestep, multiple independent cloud realizations are drawn and the
+radiation fluxes are averaged over the ensemble. This reduces noise
+from the McICA (Monte Carlo Independent Column Approximation) cloud
+overlap scheme used in RRTMG.
+
+The `do_col_by_col` flag enables column-by-column processing where
+each column can have its own independent cloud random seed, and
+`do_seed_permutation` controls whether the seed changes between
+timesteps.
+
+### Spectral flux exposure and thin-layer aerosol injection (SW)
+
+The SW driver exposes spectral (per-band) flux outputs and supports
+injection of aerosol optical properties into individual model layers.
+This enables computation of spectrally-resolved shortwave radiative
+forcing from stratospheric aerosol layers.
 
 ## Installation
 
@@ -92,3 +126,8 @@ pytest -v --pyargs climlab_rrtmg
 - Version 0.2 is the first public release (April 2022).
 The Python wrapper code has been extracted from
 [climlab v0.7.13](https://github.com/brian-rose/climlab/releases/tag/v0.7.13).
+
+## Upstream
+
+This fork is based on [climlab/climlab-rrtmg](https://github.com/climlab/climlab-rrtmg).
+The main branch in this repository is `main_stardust`.
