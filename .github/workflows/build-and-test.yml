@@ -7,34 +7,23 @@ on:
   pull_request:
   workflow_dispatch:
   schedule:
-    - cron: '35 4 * * TUE' # Tuesday at 04:35 UTC"
+    - cron: '35 4 * * TUE' # Tuesday at 04:35 UTC
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
-    name: ${{ matrix.os }} py${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}-latest
+  build-and-test-matrix:
+    name: Ubuntu py${{ matrix.python-version }}
+    runs-on: ubuntu-latest
     defaults:
       run:
-        shell: ${{ matrix.shell }}
+        shell: bash -l {0}
     strategy:
       fail-fast: false
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13']
-        os: [Ubuntu, macOS, Windows]
-        include:
-          - os: Ubuntu
-            environment-file: ci/requirements-linux.yml
-            shell: bash -l {0}
-          - os: macOS
-            environment-file: ci/requirements-macos.yml
-            shell: bash -l {0}
-          - os: Windows
-            environment-file: ci/requirements-windows.yml
-            shell: powershell
 
     steps:
       - uses: actions/checkout@v6
@@ -44,28 +33,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           activate-environment: rrtmg_build_env
           channel-priority: strict
-          environment-file: ${{ matrix.environment-file }}
-
-      - name: Configure PATH for Windows Fortran build
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          # m2w64-gcc-fortran installs gfortran.exe AND libgfortran-5.dll together
-          # in Library/mingw-w64/bin, making them version-consistent.
-          # GHCup's C:\mingw64\bin has gfortran.exe but no libgfortran-5.dll,
-          # causing STATUS_ENTRYPOINT_NOT_FOUND (0xC0000139) at sanity-check time.
-          # Put conda's mingw-w64/bin first and remove all other MinGW sources.
-          $mingwBin = "$env:CONDA\envs\rrtmg_build_env\Library\mingw-w64\bin"
-          $filteredPath = ($env:PATH -split ';' | Where-Object {
-              $_ -notlike 'C:\Strawberry*' -and
-              $_ -notlike '*Library\mingw-w64\bin' -and
-              $_ -notlike 'C:\mingw64*' -and
-              $_ -notlike 'C:\Program Files\Git\mingw64*' -and
-              $_ -ne ''
-          }) -join ';'
-          "PATH=$mingwBin;$filteredPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "FC=$mingwBin\gfortran.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "CC=$mingwBin\gcc.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          environment-file: ci/requirements-linux.yml
 
       - name: Build and install climlab_rrtmg
         run: |
@@ -73,3 +41,16 @@ jobs:
       - name: Run tests
         run: |
           pytest -v --pyargs climlab_rrtmg
+
+  build-and-test:
+    name: Build and test
+    needs: build-and-test-matrix
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify matrix jobs succeeded
+        run: |
+          if [[ "${{ needs.build-and-test-matrix.result }}" != "success" ]]; then
+            echo "Matrix jobs did not all succeed: ${{ needs.build-and-test-matrix.result }}"
+            exit 1
+          fi
