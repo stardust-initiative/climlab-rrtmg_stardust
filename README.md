@@ -126,8 +126,3 @@ pytest -v --pyargs climlab_rrtmg
 - Version 0.2 is the first public release (April 2022).
 The Python wrapper code has been extracted from
 [climlab v0.7.13](https://github.com/brian-rose/climlab/releases/tag/v0.7.13).
-
-## Upstream
-
-This fork is based on [climlab/climlab-rrtmg](https://github.com/climlab/climlab-rrtmg).
-The main branch in this repository is `main_stardust`.
