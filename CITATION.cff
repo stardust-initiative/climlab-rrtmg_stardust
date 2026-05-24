@@ -9,7 +9,9 @@ authors:
   - given-names: "Brian E. J."
     family-names: "Rose"
     affiliation: "University at Albany"
-  - name: "stardust-initiative"
+  - given-names: "Dorri"
+    family-names: "Halbertal"
+    affiliation: "Stardust Solutions Ltd"
 repository-code: "https://github.com/stardust-initiative/climlab-rrtmg_stardust"
 license: MIT
 references:
