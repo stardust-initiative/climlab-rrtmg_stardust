@@ -1,0 +1,58 @@
+cff-version: 1.2.0
+title: "climlab-rrtmg (Stardust fork)"
+message: >
+  If you use this software, please cite the Stardust paper describing the
+  modifications, the upstream climlab-rrtmg package, and the underlying
+  RRTMG model.
+type: software
+authors:
+  - given-names: "Brian E. J."
+    family-names: "Rose"
+    affiliation: "University at Albany"
+  - given-names: "Dorri"
+    family-names: "Halbertal"
+    affiliation: "Stardust Solutions Ltd"
+repository-code: "https://github.com/stardust-initiative/climlab-rrtmg_stardust"
+license: MIT
+references:
+  # TODO: update DOI / preprint URL when the Stardust preprint is published.
+  - type: article
+    title: "Solid-particle stratospheric aerosol injection: a 2-D modeling exploration of the design space"
+    authors:
+      - given-names: "Yoav"
+        family-names: "Lederer"
+      - given-names: "Nahliel"
+        family-names: "Wygoda"
+      - given-names: "Dorri"
+        family-names: "Halbertal"
+      - given-names: "Brian E. J."
+        family-names: "Rose"
+    journal: "Atmospheric Chemistry and Physics"
+    year: 2026
+    notes: "Preprint forthcoming; DOI to be assigned."
+  - type: software
+    title: "climlab-rrtmg (upstream package)"
+    repository-code: "https://github.com/climlab/climlab-rrtmg"
+    authors:
+      - given-names: "Brian E. J."
+        family-names: "Rose"
+  - type: article
+    title: "Radiative transfer for inhomogeneous atmospheres: RRTM, a validated correlated-k model for the longwave"
+    authors:
+      - family-names: "Mlawer"
+        given-names: "E. J."
+      - family-names: "Taubman"
+        given-names: "S. J."
+      - family-names: "Brown"
+        given-names: "P. D."
+      - family-names: "Iacono"
+        given-names: "M. J."
+      - family-names: "Clough"
+        given-names: "S. A."
+    journal: "Journal of Geophysical Research: Atmospheres"
+    year: 1997
+    volume: 102
+    issue: "D14"
+    start: 16663
+    end: 16682
+    doi: "10.1029/97JD00237"
