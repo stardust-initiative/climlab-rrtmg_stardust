@@ -68,19 +68,22 @@ forcing from stratospheric aerosol layers.
 
 ## Installation
 
-Pre-built binaries for many platforms are available from [conda-forge](https://conda-forge.org).
+This is the **Stardust fork** of `climlab-rrtmg`. It adds the OpenMP
+column parallelization, ensemble cloud sampling, spectral SW flux
+exposure, and aerosol-layer hooks described above.
 
-To install in the current environment:
-```
-conda install climlab-rrtmg --channel conda-forge
-```
-or create a self-contained environment:
-```
-conda create --name my_env python=3.13 climlab-rrtmg --channel conda-forge
-conda activate my_env
-```
+**For Stardust paper reproduction**, do not install this fork directly.
+Use the companion umbrella repository, which pulls this fork
+transitively at the right version-pinned tag:
 
-See below for instructions on how to build from source.
+[`stardust-initiative/solid-sai-2d-paper`](https://github.com/stardust-initiative/solid-sai-2d-paper)
+
+**Note**: the conda-forge package `climlab-rrtmg` is the *upstream*
+package and lacks the Stardust modifications listed above. Installing
+from conda-forge will not give you this fork.
+
+**To install this fork standalone** (for development, or for comparison
+against upstream), see [Building from source](#building-from-source) below.
 
 ## Example usage
 
