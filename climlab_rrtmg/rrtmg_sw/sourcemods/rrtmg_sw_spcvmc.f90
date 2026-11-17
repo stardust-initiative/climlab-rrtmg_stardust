@@ -597,6 +597,11 @@
                   zdbtmc = exp_tbl(itind)
                endif
 
+! Apply the effective aerosol transmission to the direct beam as in
+! reftra_sw, keeping total-minus-direct diffuse sources consistent.
+               if (add_aero_layer == 1 .and. lrtchkclr(jk)) then
+                  zdbtmc = zdbtmc * t_mu_col_g(jk)
+               endif
                zdbtc(jk) = zdbtmc
                ztdbtc(jk+1) = zdbtc(jk)*ztdbtc(jk)
 
@@ -614,6 +619,9 @@
                   zdbtmo = exp_tbl(itind)
                endif
 
+               if (add_aero_layer == 1 .and. lrtchkcld(jk)) then
+                  zdbtmo = zdbtmo * t_mu_col_g(jk)
+               endif
                zdbt(jk) = zclear*zdbtmc + zcloud*zdbtmo
                ztdbt(jk+1) = zdbt(jk)*ztdbt(jk)
         
