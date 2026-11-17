@@ -42,6 +42,12 @@ jobs:
         run: |
           pytest -v --pyargs climlab_rrtmg
 
+      - name: Check offline scattering example
+        working-directory: examples/offline_scattering
+        run: |
+          python -m unittest -v test_offline_scattering.py
+          python compare_native.py
+
   build-and-test:
     name: Build and test
     needs: build-and-test-matrix

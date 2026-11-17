@@ -66,6 +66,26 @@ injection of aerosol optical properties into individual model layers.
 This enables computation of spectrally-resolved shortwave radiative
 forcing from stratospheric aerosol layers.
 
+### Consistent direct-beam transmission
+
+In the modified SW pathway, the effective aerosol directional transmission
+`t_mu` multiplies both the layer total transmission and the separately
+propagated direct beam, before cumulative beam transmission is formed. This
+keeps the diffuse source (total minus direct transmission) consistent. The
+reflection coefficient is already included in the layer reflection response;
+no additional reflection factor is applied to the beam.
+
+The existing driver uses `idelm=1` (delta-scaled direct-beam diagnostics).
+This correction does not change the API or the separate, inactive `idelm=0`
+pre-delta-scaling direct-flux diagnostic branch.
+
+See the [offline scattering example](examples/offline_scattering/README.md)
+for a layered transfer-algebra check with distinct direct and diffuse responses.
+The native regression tests in
+`climlab_rrtmg/tests/test_modified_direct_beam.py` exercise the modified driver.
+These checks validate transfer consistency, not the accuracy of supplied
+optical coefficients against an independent radiative-transfer solver.
+
 ## Installation
 
 This is the **Stardust fork** of `climlab-rrtmg`. It adds the OpenMP
@@ -122,6 +142,12 @@ pytest -v --pyargs climlab_rrtmg
 ```
 
 ## Version history
+
+- Unreleased: correct effective aerosol attenuation of the propagated SW direct
+  beam in the modified pathway; add behavioral regression tests and a portable
+  offline layered-scattering example. Unmodified radiation and identity aerosol
+  coefficients are covered by regression checks. No Python API change.
+
 
 - Version 0.5.0 (May 2026) is the first Stardust-modifications release. Adds OpenMP column-radiation parallelization (LW and SW), ensemble cloud sampling for McICA noise reduction, and spectral-band SW flux exposure with thin-layer aerosol injection. See the *Stardust modifications* section above. Incorporates upstream changes through climlab-rrtmg v0.4.2.
 - Version 0.4.1 (late Feburary 2025) is a bug fix, now properly exposing some constants defined in the Fortran code to the Python wrapper.
