@@ -23,10 +23,10 @@
 
 subroutine climlab_rrtmg_sw_ini(cpdair)
     ! Modules
-    use parkind, only : rb => kind_rb
     use rrtmg_sw_init, only: rrtmg_sw_ini
     ! Input
-    real(kind=rb), intent(in) :: cpdair    ! Specific heat capacity of dry air
+    ! Explicit precision keeps the Python/F2PY scalar ABI consistent.
+    double precision, intent(in) :: cpdair    ! Specific heat capacity of dry air
                                             ! at constant pressure at 273 K
                                             ! (J kg-1 K-1)
     ! Call the initialization routine
