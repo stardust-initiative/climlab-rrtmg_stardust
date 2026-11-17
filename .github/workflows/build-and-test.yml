@@ -45,8 +45,16 @@ jobs:
       - name: Check offline scattering example
         working-directory: examples/offline_scattering
         run: |
-          python -m unittest -v test_offline_scattering.py
+          python -m unittest discover -v
           python compare_native.py
+
+      - name: Check optional atmospheric coefficient diagnostic
+        if: matrix.python-version == '3.11'
+        run: |
+          diagnostic_root=$(mktemp -d)
+          python examples/offline_scattering/prepare_diagnostic.py "$diagnostic_root/source"
+          python -m pip install --no-deps --no-build-isolation --target "$diagnostic_root/backend" --config-settings=compile-args=-j2 "$diagnostic_root/source"
+          OMP_NUM_THREADS=1 PYTHONPATH="$diagnostic_root/backend" python examples/offline_scattering/atmospheric_diagnostic.py --build-manifest "$diagnostic_root/source/diagnostic_build.json" --output "$diagnostic_root/results"
 
   build-and-test:
     name: Build and test

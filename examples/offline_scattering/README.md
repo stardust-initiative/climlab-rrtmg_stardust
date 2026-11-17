@@ -113,7 +113,82 @@ python -m pytest --pyargs climlab_rrtmg.tests.test_modified_direct_beam
 
 That test complements this standalone example. Running only this NumPy script
 does not test the installed backend or compare a real atmospheric column.
-No new native diagnostic API or coefficient-export interface is introduced.
+The installed native API remains unchanged; the opt-in source-copy exporter
+below is a separate diagnostic workflow.
 
 The code uses the repository's MIT license; existing upstream notices remain
 in their source files.
+
+## Optional atmospheric coefficient export
+
+For a matched-coefficient comparison with a finite-pressure atmosphere, the
+opt-in diagnostic below constructs a six-layer **synthetic clear-sky** column
+with water vapour, ozone, CO2, CH4, N2O, O2, native Rayleigh scattering, a surface,
+and two prescribed effective aerosol layers. It exports native per-g-point
+operators and derives the lower atmospheric direct and diffuse responses
+`A_b` and `A_d`. These are atmospheric subcolumn responses at the aerosol-region
+boundary, **not physical surface albedos**. This is reusable reader machinery,
+not a reproduction of a particular paper figure or its atmospheric inputs.
+
+Use an isolated development environment with GNU Fortran, a C compiler, Python,
+NumPy, Meson (>=0.63.3), meson-python and Ninja. The example currently supports
+little-endian Unix-like systems with GNU Fortran. From the repository root:
+
+```bash
+# Requires an activated, isolated development environment; not a production env.
+python -m pip install numpy 'meson>=0.63.3' meson-python ninja
+DEMO_WORK=$(mktemp -d)
+python examples/offline_scattering/prepare_diagnostic.py "$DEMO_WORK/source"
+python -m pip install --no-deps --no-build-isolation \
+  --config-settings=compile-args=-j2 --target "$DEMO_WORK/install" "$DEMO_WORK/source"
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONPATH="$DEMO_WORK/install" \
+  python examples/offline_scattering/atmospheric_diagnostic.py \
+  --build-manifest "$DEMO_WORK/source/diagnostic_build.json" \
+  --output "$DEMO_WORK/results"
+```
+
+Source preparation requires a new destination outside the source repository. It
+copies the source and adds diagnostic stream writes only to that copy, retaining
+existing notices. The separately installed diagnostic package is selected only
+for this subprocess via `PYTHONPATH`; the normal installed backend and public
+API stay unchanged. `OMP_NUM_THREADS` must equal 1: concurrent writes to this
+simple diagnostic stream are unsupported. The fixture rejects cloudy inputs;
+although native clear-sky coefficients exist inside cloudy calculations, such
+calls are outside this workflow's supported scope.
+
+The script checks the input/exported effective-layer indexing explicitly,
+derives the occupied aerosol-region boundaries, and uses the exported corrected
+beam directly. It does not repair or multiply the exported beam a second time.
+It checks that this beam equals clean atmospheric beam times the effective
+transmission. The lower region is composed independently; its `A_b`, `A_d` are
+checked against native lower-subcolumn responses. Full up/down interface fluxes
+are compared to the independent dense solve; spectral weights restore W/m² and
+are checked against the public wrapper's broadband clear-sky outputs. A paired
+identity-aerosol calculation checks zero forcing, and clean/aerosol lower-region
+responses must match because the aerosol lies above that boundary.
+
+Outputs include:
+
+- `summary.json`: source-preparation manifest, backend/fixture hashes, pressure
+  interfaces, aerosol-region indices, errors and paired aerosol forcing.
+- `clean.npz`, `aerosol.npz`, `identity.npz`: lower direct/diffuse responses,
+  spectral bands and weights, native layer operators and aerosol coefficients,
+  offline/native interface fluxes and broadband fluxes.
+- Corresponding `.bin` streams: versioned raw diagnostic exports, with hashes
+  recorded in the summary. The reader rejects unknown versions, malformed
+  dimensions, invalid spectral ordering, nonfinite values and truncated files.
+
+The NPZ interface order is top-to-bottom. Coefficients and normalized interface
+fluxes are dimensionless; spectral weights and weighted broadband fluxes use
+W/m². The native atmospheric input grid is bottom-to-top while the effective
+layer coefficients are supplied top-to-bottom. Pressure boundaries are saved
+from the fixture's actual grid. Tests for the parser require no compiled backend:
+
+```bash
+cd examples/offline_scattering
+python -m unittest -v test_offline_scattering.py test_atmospheric_diagnostic.py
+```
+
+The exporter is deliberately separate from the production wrapper. Agreement
+checks its matched transfer algebra; it does not independently establish the
+physical accuracy of gas or aerosol coefficients, clouds, or optical closures.

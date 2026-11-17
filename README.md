@@ -80,7 +80,9 @@ This correction does not change the API or the separate, inactive `idelm=0`
 pre-delta-scaling direct-flux diagnostic branch.
 
 See the [offline scattering example](examples/offline_scattering/README.md)
-for a layered transfer-algebra check with distinct direct and diffuse responses.
+for a layered transfer-algebra check with distinct direct and diffuse responses,
+and an optional isolated diagnostic build that derives those responses from
+a clear-sky atmospheric column.
 The native regression tests in
 `climlab_rrtmg/tests/test_modified_direct_beam.py` exercise the modified driver.
 These checks validate transfer consistency, not the accuracy of supplied
@@ -146,7 +148,9 @@ pytest -v --pyargs climlab_rrtmg
 - Unreleased: correct effective aerosol attenuation of the propagated SW direct
   beam in the modified pathway; add behavioral regression tests and a portable
   offline layered-scattering example. Unmodified radiation and identity aerosol
-  coefficients are covered by regression checks. No Python API change.
+  coefficients are covered by regression checks. Correct the SW initializer's
+  scalar precision to return finite native heating rates; fluxes are unchanged
+  by this initialization correction. No Python API change.
 
 
 - Version 0.5.0 (May 2026) is the first Stardust-modifications release. Adds OpenMP column-radiation parallelization (LW and SW), ensemble cloud sampling for McICA noise reduction, and spectral-band SW flux exposure with thin-layer aerosol injection. See the *Stardust modifications* section above. Incorporates upstream changes through climlab-rrtmg v0.4.2.
