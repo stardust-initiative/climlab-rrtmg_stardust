@@ -145,7 +145,7 @@ pytest -v --pyargs climlab_rrtmg
 
 ## Version history
 
-- Unreleased: correct effective aerosol attenuation of the propagated SW direct
+- Version 0.5.1 (November 2026): correct effective aerosol attenuation of the propagated SW direct
   beam in the modified pathway; add behavioral regression tests and a portable
   offline layered-scattering example. Unmodified radiation and identity aerosol
   coefficients are covered by regression checks. Correct the SW initializer's

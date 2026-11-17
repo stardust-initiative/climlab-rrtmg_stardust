@@ -7,7 +7,7 @@ requires = [
 
 [project]
 name = "climlab-rrtmg"
-version = "0.5.0"
+version = "0.5.1"
 description = "Python wrapper for the RRTMG radiation modules"
 license = { file = "LICENSE" }
 maintainers = [
