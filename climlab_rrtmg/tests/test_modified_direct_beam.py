@@ -9,7 +9,7 @@ import pytest
 from climlab_rrtmg import rrtmg_sw
 
 
-def _column(layers, *, enabled=True, cloud=0.0, pressure=1.e-6, mu=0.5, cloud_tau=0.):
+def _column(layers, *, enabled=True, cloud=0.0, pressure=1.e-6, mu=0.5, cloud_tau=0., cpdair=1004.):
     n = len(layers)
     shape = (1, n)
     zero = np.zeros(shape)
@@ -39,7 +39,7 @@ def _column(layers, *, enabled=True, cloud=0.0, pressure=1.e-6, mu=0.5, cloud_ta
                 add_aero_layer=int(enabled),
                 r_mu=coefficients[0], t_mu=coefficients[1],
                 r_bar=coefficients[2], t_bar=coefficients[3])
-    rrtmg_sw.climlab_rrtmg_sw_ini(1004.)
+    rrtmg_sw.climlab_rrtmg_sw_ini(cpdair)
     return rrtmg_sw.climlab_rrtmg_sw_ensemble(**args)
 
 
@@ -122,3 +122,19 @@ def test_cloud_overlap_preserves_clear_flux_and_spectral_consistency(cloud):
         assert cloudy[spectral].min() >= -1e-8
         np.testing.assert_allclose(cloudy[spectral].sum(axis=-1),cloudy[total],atol=1e-9)
     assert np.diff((cloudy[1]-cloudy[0])[0]).min() >= -1e-6
+
+
+def test_specific_heat_initializer_has_finite_heating_and_correct_scaling():
+    layers = [(.05, .85, .1, .8), (.04, .9, .08, .85)]
+    try:
+        normal = _column(layers, pressure=1000., cpdair=1004.)
+        doubled = _column(layers, pressure=1000., cpdair=2008.)
+    finally:
+        rrtmg_sw.climlab_rrtmg_sw_ini(1004.)
+    for value in normal + doubled:
+        assert np.isfinite(value).all()
+    for index in (0, 1, 3, 4, 6, 7, 8, 9):
+        np.testing.assert_array_equal(normal[index], doubled[index])
+    for index in (2, 5):
+        assert np.max(np.abs(normal[index])) > 0.
+        np.testing.assert_allclose(doubled[index], normal[index]/2., rtol=2e-14, atol=1e-14)
